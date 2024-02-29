@@ -9,10 +9,10 @@ $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
 ## Tool Binaries
-KUSTOMIZE ?= $(LOCALBIN)/kustomize
-CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
-ENVTEST ?= $(LOCALBIN)/setup-envtest
-CRDOC ?= $(LOCALBIN)/crdoc
+KUSTOMIZE ?= go run sigs.k8s.io/kustomize/kustomize/v5@$(KUSTOMIZE_VERSION)
+CONTROLLER_GEN ?= go run sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+ENVTEST ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+CRDOC ?= go run fybrik.io/crdoc@$(CRDOC_VERSION)
 
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/k0sproject/k0smotron:latest
@@ -21,13 +21,6 @@ ENVTEST_K8S_VERSION = 1.26.0
 
 # GO_TEST_DIRS is a list of directories to run go test on, excluding inttests
 GO_TEST_DIRS ?= ./api/... ./cmd/... ./internal/...
-
-# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
-ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
-else
-GOBIN=$(shell go env GOBIN)
-endif
 
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -57,34 +50,20 @@ help: ## Display this help.
 ##@ Development
 
 ### manifests
-manifests_targets += config/crd/bases/bootstrap.cluster.x-k8s.io_k0sconfigs.yaml
-config/crd/bases/bootstrap.cluster.x-k8s.io_k0sconfigs.yaml: $(CONTROLLER_GEN)
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 manifests_targets += config/crd/bases/k0smotron.io_clusters.yaml
 manifests_targets += config/crd/bases/k0smotron.io_jointokenrequests.yaml
-manifests_targets += config/crd/bases/bootstrap.cluster.x-k8s.io_k0sconfigs.yaml
-manifests_targets += config/crd/bases/bootstrap.cluster.x-k8s.io_k0sworkerconfigs.yaml
-manifests_targets += config/crd/bases/bootstrap.cluster.x-k8s.io_k0sworkerconfigtemplates.yaml
-manifests_targets += config/crd/bases/controlplane.cluster.x-k8s.io_k0scontrollerconfigs.yaml
-manifests_targets += config/crd/bases/controlplane.cluster.x-k8s.io_k0scontrolplanes.yaml
-manifests_targets += config/crd/bases/controlplane.cluster.x-k8s.io_k0smotroncontrolplanes.yaml
-manifests_targets += config/crd/bases/infrastructure.cluster.x-k8s.io_remoteclusters.yaml
-manifests_targets += config/crd/bases/infrastructure.cluster.x-k8s.io_remotemachines.yaml
-config/crd/bases/k0smotron.io_clusters.yaml: $(CONTROLLER_GEN) api/k0smotron.io/v1beta1/k0smotroncluster_types.go
+config/crd/bases/k0smotron.io_clusters.yaml: api/k0smotron.io/v1beta1/k0smotroncluster_types.go
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 manifests: $(manifests_targets) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 
 ### generate
 generate_targets += api/k0smotron.io/v1beta1/zz_generated.deepcopy.go
-generate_targets += api/bootstrap/v1beta1/zz_generated.deepcopy.go
-generate_targets += api/controlplane/v1beta1/zz_generated.deepcopy.go
-generate_targets += api/infrastructure/v1beta1/zz_generated.deepcopy.go
-$(generate_targets): $(CONTROLLER_GEN)
+$(generate_targets):
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-generate: $(generate_targets) clusterapi-manifests ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: $(generate_targets) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 
 
 GO_PKGS=$(shell go list ./...)
@@ -97,7 +76,7 @@ vet: ## Run go vet against code.
 	go vet $(GO_PKGS)
 
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
+test: manifests generate fmt vet ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $(GO_TEST_DIRS) -coverprofile cover.out
 
 ##@ Build
@@ -151,15 +130,15 @@ ifndef ignore-not-found
 endif
 
 .PHONY: install
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+install: manifests ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 .PHONY: uninstall
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
+uninstall: manifests ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/crd | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image k0s/k0smotron=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
@@ -168,44 +147,11 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: release
-release: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+release: manifests ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > install.yaml
 	git checkout config/manager/kustomization.yaml
-
-clusterapi-manifests:
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./api/bootstrap/..." output:crd:artifacts:config=config/clusterapi/bootstrap/bases
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./api/controlplane/..." output:crd:artifacts:config=config/clusterapi/controlplane/bases
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./api/infrastructure/..." output:crd:artifacts:config=config/clusterapi/infrastructure/bases
-
-bootstrap-components.yaml: $(CONTROLLER_GEN) clusterapi-manifests kustomize
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/clusterapi/bootstrap/ > bootstrap-components.yaml
-	git checkout config/manager/kustomization.yaml
-
-control-plane-components.yaml: $(CONTROLLER_GEN) clusterapi-manifests kustomize
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/clusterapi/controlplane/ > control-plane-components.yaml
-	git checkout config/manager/kustomization.yaml
-
-infrastructure-components.yaml: $(CONTROLLER_GEN) clusterapi-manifests kustomize
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/clusterapi/infrastructure/ > infrastructure-components.yaml
-	git checkout config/manager/kustomization.yaml
 ##@ Build Dependencies
-
-kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary. If wrong version is installed, it will be removed before downloading.
-$(KUSTOMIZE): Makefile.variables | $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install sigs.k8s.io/kustomize/kustomize/v5@$(KUSTOMIZE_VERSION)
-
-controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary. If wrong version is installed, it will be overwritten.
-$(CONTROLLER_GEN): Makefile.variables | $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
-
-.PHONY: envtest
-envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
-$(ENVTEST): $(LOCALBIN)
-	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
 .PHONY: docs
 docs:
@@ -220,12 +166,8 @@ docs-serve-dev:
 	  -p '$(DOCS_DEV_PORT):8000' \
 	  k0sdocs.docker-image.serve-dev
 
-crdoc: $(CRDOC) ## Download crdoc locally if necessary. If wrong version is installed, it will be overwritten.
-$(CRDOC): Makefile.variables | $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install fybrik.io/crdoc@$(CRDOC_VERSION)
-
 .PHONY: docs-generate-reference
-docs-generate-reference: $(CRDOC)
+docs-generate-reference:
 	$(CRDOC) --resources config/crd/bases/ --output docs/resource-reference.md
 
 .PHONY: $(smoketests)
