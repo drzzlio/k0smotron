@@ -25,13 +25,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
 
-	bootstrapv1beta1 "github.com/k0sproject/k0smotron/api/bootstrap/v1beta1"
-	controlplanev1beta1 "github.com/k0sproject/k0smotron/api/controlplane/v1beta1"
-	infrastructurev1beta1 "github.com/k0sproject/k0smotron/api/infrastructure/v1beta1"
 	k0smotronv1beta1 "github.com/k0sproject/k0smotron/api/k0smotron.io/v1beta1"
-	"github.com/k0sproject/k0smotron/internal/controller/bootstrap"
-	"github.com/k0sproject/k0smotron/internal/controller/controlplane"
-	"github.com/k0sproject/k0smotron/internal/controller/infrastructure"
 	controller "github.com/k0sproject/k0smotron/internal/controller/k0smotron.io"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -68,13 +62,10 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(k0smotronv1beta1.AddToScheme(scheme))
-	utilruntime.Must(bootstrapv1beta1.AddToScheme(scheme))
 
 	// Register cluster-api types
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(clusterv1.AddToScheme(scheme))
-	utilruntime.Must(controlplanev1beta1.AddToScheme(scheme))
-	utilruntime.Must(infrastructurev1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -159,69 +150,6 @@ func main() {
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
-
-	if isControllerEnabled(bootstrapController) {
-		if err = (&bootstrap.Controller{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "Bootstrap")
-			os.Exit(1)
-		}
-		if err = (&bootstrap.ControlPlaneController{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "Bootstrap")
-			os.Exit(1)
-		}
-	}
-
-	if isControllerEnabled(controlPlaneController) {
-		if err = (&controlplane.K0smotronController{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "K0smotronControlPlane")
-			os.Exit(1)
-		}
-
-		if err = (&controlplane.K0sController{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "K0sController")
-			os.Exit(1)
-		}
-	}
-
-	if isControllerEnabled(infrastructureController) {
-		if err = (&infrastructure.RemoteMachineController{
-			Client:     mgr.GetClient(),
-			Scheme:     mgr.GetScheme(),
-			ClientSet:  clientSet,
-			RESTConfig: restConfig,
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "RemoteMachine")
-			os.Exit(1)
-		}
-
-		if err = (&infrastructure.ClusterController{
-			Client: mgr.GetClient(),
-			Scheme: mgr.GetScheme(),
-		}).SetupWithManager(mgr); err != nil {
-			setupLog.Error(err, "unable to create controller", "controller", "RemoteCluster")
-			os.Exit(1)
-		}
-	}
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
