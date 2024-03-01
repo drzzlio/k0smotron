@@ -50,7 +50,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21.1'
+          go-version: '1.21.7'
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -59,64 +59,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Login to Quay registry
-        uses: docker/login-action@v3
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USER }}
-          password: ${{ secrets.QUAY_PASSWORD }}
-
-      - name: Build image and push to Docker Hub and GitHub image registry
+      - name: Build image and push to GitHub image registry
         uses: docker/build-push-action@v5
         with:
           build-args: |
-            BUILD_IMG=golang:1.21.3
+            BUILD_IMG=golang:1.21.7
           context: .
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
-            quay.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
+            ghcr.io/drzzlio/k0smotron:${{ needs.release.outputs.image_tag }}
           push: true
-
-      - name: Create install files
-        if: github.repository == 'k0sproject/k0smotron'
-        run: |
-          make bootstrap-components.yaml IMG=quay.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
-          make control-plane-components.yaml IMG=quay.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
-          make infrastructure-components.yaml IMG=quay.io/k0sproject/k0smotron:${{ needs.release.outputs.image_tag }}
-
-      - name: Upload Release Assets - metadata.yaml
-        id: upload-release-asset-metadata
-        uses: shogo82148/actions-upload-release-asset@v1.6.6
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./metadata.yaml
-          asset_name: metadata.yaml
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Assets - bootstrap-components.yaml
-        id: upload-release-asset-bootstrap
-        uses: shogo82148/actions-upload-release-asset@v1.6.6
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./bootstrap-components.yaml
-          asset_name: bootstrap-components.yaml
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Assets - control-plane-components.yaml
-        id: upload-release-asset-control-plane
-        uses: shogo82148/actions-upload-release-asset@v1.6.6
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./control-plane-components.yaml
-          asset_name: control-plane-components.yaml
-          asset_content_type: application/octet-stream
-
-      - name: Upload Release Assets - infrastructure-components.yaml
-        id: upload-release-asset-images
-        uses: shogo82148/actions-upload-release-asset@v1.6.6
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./infrastructure-components.yaml
-          asset_name: infrastructure-components.yaml
-          asset_content_type: application/octet-stream
