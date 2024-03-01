@@ -19,7 +19,6 @@ package k0smotronio
 import (
 	"context"
 	"fmt"
-	"time"
 
 	apps "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -95,35 +94,35 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	logger.Info("Reconciling services")
 	if err := r.reconcileServices(ctx, kmc); err != nil {
 		r.updateStatus(ctx, kmc, "Failed reconciling services")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	if err := r.reconcileCM(ctx, kmc); err != nil {
 		r.updateStatus(ctx, kmc, "Failed reconciling configmap")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	if err := r.reconcileEntrypointCM(ctx, kmc); err != nil {
 		r.updateStatus(ctx, kmc, "Failed reconciling entrypoint configmap")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	if kmc.Spec.EnableMonitoring {
 		if err := r.reconcileMonitoringCM(ctx, kmc); err != nil {
 			r.updateStatus(ctx, kmc, "Failed reconciling prometheus configmap")
-			return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+			return ctrl.Result{}, err
 		}
 	}
 
 	logger.Info("Reconciling statefulset")
 	if err := r.reconcileStatefulSet(ctx, kmc); err != nil {
 		r.updateStatus(ctx, kmc, fmt.Sprintf("Failed reconciling statefulset, %+v", err))
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	if err := r.reconcileKubeConfigSecret(ctx, kmc); err != nil {
 		r.updateStatus(ctx, kmc, "Failed reconciling secret")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	r.updateStatus(ctx, kmc, "Reconciliation successful")

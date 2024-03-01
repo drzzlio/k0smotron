@@ -68,16 +68,11 @@ func (r *JoinTokenRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if !jtr.ObjectMeta.DeletionTimestamp.IsZero() {
-		logger.Info("JoinTokenRequest is being deleted, no action needed")
-		return ctrl.Result{}, nil
-	}
-
 	logger.Info("Reconciling")
 	pod, err := util.FindStatefulSetPod(ctx, r.ClientSet, km.GetStatefulSetName(jtr.Spec.ClusterRef.Name), jtr.Spec.ClusterRef.Namespace)
 	if err != nil {
 		r.updateStatus(ctx, jtr, "Failed finding pods in statefulset")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	finalizerName := "jointokenrequests.k0smotron.io/finalizer"
@@ -107,18 +102,18 @@ func (r *JoinTokenRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	token, err := exec.PodExecCmdOutput(ctx, r.ClientSet, r.RESTConfig, pod.Name, pod.Namespace, cmd)
 	if err != nil {
 		r.updateStatus(ctx, jtr, "Failed getting token")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	if err := r.reconcileSecret(ctx, jtr, token); err != nil {
 		r.updateStatus(ctx, jtr, "Failed creating secret")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 
 	tokenID, err := getTokenID(token, jtr.Spec.Role)
 	if err != nil {
 		r.updateStatus(ctx, jtr, "Failed getting token id")
-		return ctrl.Result{Requeue: true, RequeueAfter: time.Minute}, err
+		return ctrl.Result{}, err
 	}
 	jtr.Status.TokenID = tokenID
 	r.updateStatus(ctx, jtr, "Reconciliation successful")
