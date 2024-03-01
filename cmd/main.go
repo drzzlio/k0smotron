@@ -44,11 +44,6 @@ import (
 var (
 	scheme             = runtime.NewScheme()
 	setupLog           = ctrl.Log.WithName("setup")
-	enabledControllers = map[string]bool{
-		bootstrapController:      true,
-		controlPlaneController:   true,
-		infrastructureController: true,
-	}
 )
 
 const (
@@ -173,8 +168,4 @@ func loadRestConfig() (*rest.Config, error) {
 		return clientcmd.BuildConfigFromFlags("", os.Getenv("KUBECONFIG"))
 	}
 	return rest.InClusterConfig()
-}
-
-func isControllerEnabled(controllerName string) bool {
-	return enabledControllers[controllerName]
 }
