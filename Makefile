@@ -17,7 +17,7 @@ CRDOC ?= go run fybrik.io/crdoc@$(CRDOC_VERSION)
 CODEPATHS={./api/...,./cmd/...,./internal/...,./inttest/...}
 
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/k0sproject/k0smotron:latest
+IMG ?= ghcr.io/drzzlio/k0smotron:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.26.0
 
@@ -68,7 +68,7 @@ $(generate_targets):
 generate: $(generate_targets) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 
 
-GO_PKGS=$(shell go list ./...)
+GO_PKGS=$(shell go list $(CODEPATHS))
 .PHONY: fmt
 fmt: ## Run go fmt against code.
 	go fmt $(GO_PKGS)
