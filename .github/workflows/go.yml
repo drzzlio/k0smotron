@@ -28,7 +28,6 @@ jobs:
 
   unittest:
     name: Unit test
-    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -46,6 +45,7 @@ jobs:
 
   build:
     name: Build
+    needs: unittest
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
