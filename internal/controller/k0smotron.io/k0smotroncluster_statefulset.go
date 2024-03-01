@@ -179,6 +179,9 @@ func (r *ClusterReconciler) generateStatefulSet(kmc *km.Cluster) (apps.StatefulS
 	}
 	// Mount certificates if they are provided
 	if kmc.Spec.CertificateRefs != nil && len(kmc.Spec.CertificateRefs) > 0 {
+		if kmc.Spec.Persistence.Type == "" {
+			kmc.Spec.Persistence.Type = "emptyDir"
+		}
 		r.mountSecrets(kmc, &statefulSet)
 	}
 
