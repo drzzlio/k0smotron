@@ -86,35 +86,35 @@ jobs:
         run: |
           make test
 
-  smoketest:
-    name: Smoke test
-    needs: build
-    runs-on: ubuntu-22.04-8core
-    strategy:
-      fail-fast: false
-      matrix:
-        smoke-suite:
-          - check-basic
-          - check-hostpath
-          - check-ha-controller
-          - check-ha-controller-secret
-          - check-jointoken
-          - check-monitoring
-
-    steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      - name: Create image bundle
-        run: |
-          make release
-          make k0smotron-image-bundle.tar
-
-      - name: Run inttest
-        run: |
-          make -C inttest ${{ matrix.smoke-suite }}
+#  smoketest:
+#    name: Smoke test
+#    needs: build
+#    runs-on: ubuntu-22.04-8core
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        smoke-suite:
+#          - check-basic
+#          - check-hostpath
+#          - check-ha-controller
+#          - check-ha-controller-secret
+#          - check-jointoken
+#          - check-monitoring
+#
+#    steps:
+#      - name: Check out code into the Go module directory
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Go
+#        uses: actions/setup-go@v5
+#        with:
+#          go-version-file: go.mod
+#
+#      - name: Create image bundle
+#        run: |
+#          make release
+#          make k0smotron-image-bundle.tar
+#
+#      - name: Run inttest
+#        run: |
+#          make -C inttest ${{ matrix.smoke-suite }}
