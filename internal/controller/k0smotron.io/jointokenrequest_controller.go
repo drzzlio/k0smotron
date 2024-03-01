@@ -67,7 +67,7 @@ func (r *JoinTokenRequestReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		// on deleted requests.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	
+
 	if !jtr.ObjectMeta.DeletionTimestamp.IsZero() {
 		logger.Info("JoinTokenRequest is being deleted, no action needed")
 		return ctrl.Result{}, nil

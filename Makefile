@@ -14,6 +14,8 @@ CONTROLLER_GEN ?= go run sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTR
 ENVTEST ?= go run sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 CRDOC ?= go run fybrik.io/crdoc@$(CRDOC_VERSION)
 
+CODEPATHS={./api/...,./cmd/...,./internal/...,./inttest/...}
+
 # Image URL to use all building/pushing image targets
 IMG ?= quay.io/k0sproject/k0smotron:latest
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
@@ -54,14 +56,14 @@ help: ## Display this help.
 manifests_targets += config/crd/bases/k0smotron.io_clusters.yaml
 manifests_targets += config/crd/bases/k0smotron.io_jointokenrequests.yaml
 config/crd/bases/k0smotron.io_clusters.yaml: api/k0smotron.io/v1beta1/k0smotroncluster_types.go
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:generateEmbeddedObjectMeta=true webhook paths="$(CODEPATHS)" output:crd:artifacts:config=config/crd/bases
 
 manifests: $(manifests_targets) ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 
 ### generate
 generate_targets += api/k0smotron.io/v1beta1/zz_generated.deepcopy.go
 $(generate_targets):
-	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="$(CODEPATHS)"
 
 generate: $(generate_targets) ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 

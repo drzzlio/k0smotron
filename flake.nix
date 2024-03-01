@@ -16,9 +16,10 @@
 
       devenv.shells.default = {
         languages.go.enable = true;
+        languages.c.enable = true;
 
         env = {
-          GOPROXY="https://goproxy.io,direct";
+          GOPROXY="https://proxy.golang.org,direct";
         };
 
         packages = with pkgs; [
