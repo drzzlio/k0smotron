@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"time"
 
 	"k8s.io/client-go/tools/clientcmd"
 
