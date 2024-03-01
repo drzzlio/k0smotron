@@ -32,3 +32,5 @@ k0smotron-image-bundle.tar
 *.swp
 *.swo
 *~
+
+.devenv
