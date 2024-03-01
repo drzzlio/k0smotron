@@ -28,12 +28,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	km "github.com/k0sproject/k0smotron/api/k0smotron.io/v1beta1"
+	km "github.com/drzzlio/k0smotron/api/k0smotron.io/v1beta1"
 )
 
 const (
 	defaultK0SImage   = "k0sproject/k0s"
-	defaultK0SVersion = "v1.27.2-k0s.0"
+	defaultK0SVersion = "v1.29.2-k0s.0"
 	defaultK0SSuffix  = "k0s.0"
 )
 
@@ -114,7 +114,6 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	logger.Info("Reconciling statefulset")
 	if err := r.reconcileStatefulSet(ctx, kmc); err != nil {
 		r.updateStatus(ctx, kmc, fmt.Sprintf("Failed reconciling statefulset, %+v", err))
 		return ctrl.Result{}, err

@@ -27,7 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/k0sproject/k0smotron/inttest/util"
+	"github.com/drzzlio/k0smotron/inttest/util"
 )
 
 type JoinTokenSuite struct {

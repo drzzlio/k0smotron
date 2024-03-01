@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"strings"
 
-	km "github.com/k0sproject/k0smotron/api/k0smotron.io/v1beta1"
-	"github.com/k0sproject/k0smotron/internal/controller/util"
+	km "github.com/drzzlio/k0smotron/api/k0smotron.io/v1beta1"
+	"github.com/drzzlio/k0smotron/internal/controller/util"
 
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"

@@ -39,7 +39,7 @@ import (
 	"k8s.io/client-go/restmapper"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/k0sproject/k0smotron/internal/exec"
+	"github.com/drzzlio/k0smotron/internal/exec"
 )
 
 func InstallK0smotronOperator(ctx context.Context, kc *kubernetes.Clientset, rc *rest.Config) error {

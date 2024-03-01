@@ -25,8 +25,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/clientcmd"
 
-	k0smotronv1beta1 "github.com/k0sproject/k0smotron/api/k0smotron.io/v1beta1"
-	controller "github.com/k0sproject/k0smotron/internal/controller/k0smotron.io"
+	k0smotronv1beta1 "github.com/drzzlio/k0smotron/api/k0smotron.io/v1beta1"
+	controller "github.com/drzzlio/k0smotron/internal/controller/k0smotron.io"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
