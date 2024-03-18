@@ -13,6 +13,11 @@
     systems = nixpkgs.lib.systems.flakeExposed;
 
     perSystem = { config, system, pkgs, ... }: {
+      packages.default = pkgs.buildGoModule {
+        name = "k0smotron";
+        src = ./.;
+        vendorHash = "sha256-kXwhE9QSYwuDjszF0tydpwvREYM1WlbDztmr+3n/f4g=";
+      };
 
       devenv.shells.default = {
         languages.go.enable = true;
